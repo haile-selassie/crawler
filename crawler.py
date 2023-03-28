@@ -15,12 +15,14 @@ import operator
 #TODO:  Add option to scrape information off of the websites.
 #       Ex: email addresses, addresses, phone numbers, titles, or paragraphs
 
-start_url = "https://www.gnu.org/"
+#TODO: Timeouts for domains
+
+start_url = "https://www.fsf.org/twitter"
 visited = list()
 to_visit = list()
 to_visit.append(start_url)
 domains = dict()
-TIME_BETWEEN_REQUESTS = 0.5
+TIME_BETWEEN_REQUESTS = 0.1
 
 def domain_from_url(url):
     domain = re.search(r"([\d\w]{2,}\.)+[\d\w]{2,}",url).group()
@@ -33,10 +35,12 @@ def main():
         try:
             protocol = re.search(r"https*",url).group()
         except:
+            print("Could not find protocol in",url)
             continue
         try:
             domain = domain_from_url(url)
         except:
+            print("Could not find domain of",url)
             continue
         to_visit.remove(url)
         visited.append(url)
@@ -44,6 +48,7 @@ def main():
         try:
             webpage = requests.get(url,timeout=5)
         except:
+            print("Bad url or timeout",url)
             continue
         if not webpage.status_code in range(200,299):
             continue
@@ -68,6 +73,9 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Crawler stopped.")
     finally:
+        with open("urls.txt","a") as savefile:
+            for url in visited:
+                savefile.write(url.strip()+"\n")
         domains = dict(sorted(domains.items(), key=operator.itemgetter(1),reverse=True))
         print("------------------------------")
         for key in domains:
